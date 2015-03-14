@@ -1,0 +1,4 @@
+subdirs(
+	client
+	server
+)

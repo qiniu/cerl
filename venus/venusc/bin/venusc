@@ -1,0 +1,16 @@
+#!/usr/bin/php
+<?php
+	$argc = $_SERVER["argc"];
+	$argv = $_SERVER["argv"];
+
+	if ($argc == 1)
+	{
+		echo "Usage: venusc <server_description_language_file.sdl>\n";
+		return -1;
+	}
+	else
+	{
+		$AppPath = dirname($argv[0]);
+		system("sdl2json $argv[1] | php $AppPath/gen_cpps");
+	}
+?>

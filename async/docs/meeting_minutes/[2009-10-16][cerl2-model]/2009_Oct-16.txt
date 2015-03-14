@@ -1,0 +1,57 @@
+/*
+	Description:  	会议纪要
+					会议时间：2009-Oct-16
+					与会人员：许式伟，于曦鹤，莫华枫，马飞涛，宋海涛
+	Author:			于曦鹤 [KrzyCube@gmail.com]
+	Date:			2009-Oct-19	
+*/
+
+1. 主要议题
+	如何在C++代码中添加关键字将同步RPC语法糖自动拆解为异步执行流
+	
+2. 论及内容
+	2.1 关键字
+		2.1.1 在函数上添加关键字指名此函数需要Generator扫描
+		2.2.2 在同步RPC调用处添加关键字指明需要被拆解
+	2.2 变量访问
+		2.2.2 在讨论 a. 结构体方式传递所有局部变量,和 b. 将函数包装成class 两种方案后选择后者
+	2.3 if，for 代码块中的拆解
+		2.3.1 if block
+		语法糖：
+			if ()
+			{
+				Statements1;
+				sync rpc_call(args);
+				Statements2;
+			}
+			Statement3;
+			
+		将会转换为：
+			if ()
+			{
+				Statement;
+				...
+				stub = async_call(args);
+				register(stub, callback);
+				return;
+			}
+			Statement3;
+			
+			其中： 
+			callback(...)
+			{
+				Statements2;
+				Statements3
+			}
+			
+		2.3.2, for block
+			层层嵌套的callback方式实现的难度非常大，导致代码异常复杂。
+	
+3. 讨论结果
+	引入纤程(Fiber) , 定义参见：http://en.wikipedia.org/wiki/Fiber_(computer_science)#Fibers_and_coroutines
+	3.1 好处
+		3.1.1 纤程自身即为一个任务状态机，阻塞时主动放权切换到scheduler，\
+			由scheduler再根据请求寻找(直接通过Fiber ID)相应的Process执行对应的Fiber
+		3.1.2 无需再为request保存context，不需要自己在cerl实现上维护context，无需传递局部变量等
+		
+	3.2 不再需要引入关键字， 直接在cerl api层面提供语法糖，无需另外扫描以生成真正的C++代码

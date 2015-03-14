@@ -1,0 +1,7 @@
+export PRJCONV_BITS=32
+export PRJCONV_OUTFILE=vc8-win32.vcproj
+prjconv vcproj $*
+export PRJCONV_BITS=64
+export PRJCONV_OUTFILE=vc8-win64.vcproj
+prjconv vcproj $*
+

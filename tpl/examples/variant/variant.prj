@@ -1,0 +1,23 @@
+[Include]
+../../../tpl/include
+../../../stdext/include
+../../../boost
+../../../boostmm
+
+[Config Release]
+Product		Exe Release/emu
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/emu
+Options		Debug; MultiThread; AnsiChar; Rtti; Exception
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+Variant.cpp
+

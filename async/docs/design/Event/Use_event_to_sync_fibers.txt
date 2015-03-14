@@ -1,0 +1,123 @@
+本文介绍如何使用 Event 来进行 Fiber 同步。
+
+一个设想的场景：
+
+* 某个worker Fiber在某个时刻，希望同时执行若干job（job1 ～ jobN）。
+* 该worker Fiber并不总是等待这些job全部完成才继续向执行，而是在满足某个条件时就结束等待。
+
+伪代码：
+
+job1()
+{
+	...
+	if (满足条件)
+		唤醒worker Fiber;
+}
+
+jobN()
+{
+	...
+	if (满足条件)
+		唤醒worker Fiber;
+}
+
+worker()
+{
+	startFiber(job1);
+	...
+	startFiber(jobN);
+	
+	等待(直到条件满足或者timeout);
+}
+
+使用 FiberEvent，你可以完成该场景。如下：
+
+struct JobParam
+{
+	cerl::FiberEvent* ev;
+	... // 其他共享数据
+};
+
+void cerl_call job1(LPVOID lpParam)
+{
+	cerl::FiberParam p(lpParam);
+	JobParam* const jobParam = (JobParam*)p.val;
+	cerl::FiberEvent::Notifier ev(jobParam->ev);
+	...
+	if (ev.good() && jobParam满足条件)
+		ev.notify();
+}
+
+void cerl_call jobN(LPVOID lpParam)
+{
+	// 同job1类似
+}
+
+void cerl_call worker(LPVOID lpParam)
+{
+	cerl::FiberParam p(lpParam);
+	
+	...
+	
+	cerl::FiberEvent ev;
+	JobParam jobParam = { &ev, ... };
+	p.service->startFiber(job1, &jobParam);
+	...
+	p.service->startFiber(jobN, &jobParam);
+	
+	bool fOk = ev.timed_wait(p.self, timeout);
+	...
+}
+
+以上代码注意点：
+
+* job1 ~ jobN 纤程中对 jobParam 对象的任何操作，都需要在判断 ev.good() 成立后才可以访问。
+
+样例（实现一个Multicall）：
+
+// -------------------------------------------------------------------------
+
+struct MultiCallParam
+{
+	cerl::FiberEvent* ev;
+	int count;
+};
+
+void cerl_callback do_call(LPVOID lpParam)
+{
+	cerl::FiberParam p(lpParam);
+
+	MultiCallParam* const callParam = (MultiCallParam*)p.val;
+	
+	cerl::FiberEvent::Notifier ev(callParam->ev);
+
+	干活;
+
+	printf("job done!\n");
+	if (ev.good() && --callParam->count == 0)
+	{
+		printf("job done notified!\n");
+		ev.notify();
+	}
+}
+
+void cerl_callback testMulticall(LPVOID lpParam)
+{
+	cerl::FiberParam p(lpParam);
+
+	cerl::FiberEvent ev;
+
+	MultiCallParam callParam = { &ev, 3 };
+	for (size_t i = 0; i < 10; ++i)
+		p.service->startFiber(p.self, do_call, &callParam);
+
+	printf("waiting 3 fibers done ...\n");
+	bool fOk = ev.timed_wait(p.self, 2000);
+	printf("wait done: %d!\n", (int)fOk);
+
+	cerl::timed_yield(p.self, 2000);
+
+	p.service->quit();
+}
+
+// -------------------------------------------------------------------------

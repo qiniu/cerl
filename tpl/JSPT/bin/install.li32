@@ -1,0 +1,32 @@
+if [ -z $PLATFORM ]; then
+	PLATFORM=li32
+fi
+
+AppPath0=`dirname $0`
+AppPath=`cd $AppPath0; pwd`
+
+if [ -z $1 ]; then
+	TargetDir=~/bin
+else
+	TargetDir=$1
+fi
+
+echo "$AppPath/prjconv \$*" > $TargetDir/prjconv
+chmod +x $TargetDir/prjconv
+
+rm -f $AppPath/prj2json.exe
+
+sed -i -e "s|PLATFORM=.*|PLATFORM=$PLATFORM|" $AppPath/prj2make
+
+for File in $AppPath/prj2* ; do
+	cp $File $TargetDir/
+done
+
+cd $AppPath
+ln -s -f $PLATFORM/prj2json prj2json.exe
+cp -f jspt jspt.bat
+
+mkdir -p ~/bin
+ln -s -f $AppPath ~/bin/jspt.dir
+cp $AppPath/install.dir/* ~/bin
+

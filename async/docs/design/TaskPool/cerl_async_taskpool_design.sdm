@@ -1,0 +1,47 @@
+﻿MainThread_SchedulerFiber -> MainThread_SchedulerFiber : scheduling
+activate MainThread_SchedulerFiber
+MainThread_SchedulerFiber -> MainThread_SchedulerFiber : found a ClientToSchedule Msg
+MainThread_SchedulerFiber -> MainThread_WorkFiber : scheduling WorkFiber
+deactivate MainThread_SchedulerFiber
+
+activate MainThread_WorkFiber
+note left of MainThread_WorkFiber : Exec in MainThread
+TaskThread_MainFiber -> TaskThread_MainFiber : waiting task
+
+MainThread_WorkFiber -> MainThread_WorkFiber : executing plain code
+MainThread_WorkFiber -> MainThread_WorkFiber : generate taskMsg
+MainThread_WorkFiber -> MainThread_SchedulerFiber : msgQueue.post(taskMsg)
+MainThread_WorkFiber -> MainThread_SchedulerFiber : switchTo scheduler[yield]
+deactivate MainThread_WorkFiber
+
+activate MainThread_SchedulerFiber
+MainThread_SchedulerFiber -> MainThread_SchedulerFiber : msgQueue.pop(taskMsg)
+MainThread_SchedulerFiber -> TaskThread_MainFiber : taskQueue.addTask(taskMsg)
+deactivate MainThread_SchedulerFiber
+activate TaskThread_MainFiber
+
+MainThread_SchedulerFiber -> MainThread_SchedulerFiber : scheduling
+
+TaskThread_MainFiber -> TaskThread_MainFiber : taskQueue.pop(taskMsg)
+TaskThread_MainFiber -> MainThread_WorkFiber : switch to taskMsg.wakeup
+deactivate TaskThread_MainFiber
+
+activate MainThread_WorkFiber
+MainThread_WorkFiber -> MainThread_WorkFiber : executing WorkFiber's user code
+note right of MainThread_WorkFiber : Exec in TaskThread
+	
+MainThread_WorkFiber -> TaskThread_MainFiber : switch to Task MainFiber
+deactivate MainThread_WorkFiber
+activate TaskThread_MainFiber
+
+TaskThread_MainFiber -> MainThread_SchedulerFiber : msgQueue.post(taskDoneMsg)
+deactivate TaskThread_MainFiber
+TaskThread_MainFiber -> TaskThread_MainFiber : waiting task
+
+activate MainThread_SchedulerFiber
+MainThread_SchedulerFiber -> MainThread_SchedulerFiber : msgQueue.pop(TaskDoneMsg)
+MainThread_SchedulerFiber -> MainThread_WorkFiber : scheduling WorkFiber
+deactivate MainThread_SchedulerFiber
+activate MainThread_WorkFiber
+MainThread_WorkFiber -> MainThread_WorkFiber : executing plain code
+note left of MainThread_WorkFiber : Exec in MainThread

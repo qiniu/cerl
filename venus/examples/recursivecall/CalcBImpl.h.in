@@ -1,0 +1,41 @@
+/*
+	Description: 
+	Author:			SDL Compiler
+*/
+
+#ifndef RECURSIVECALL_CALCB_IMPL_H
+#define RECURSIVECALL_CALCB_IMPL_H
+
+#ifndef SDL_RECURSIVECALL_BASE_H
+#include "sdl_recursivecall_base.h"
+#endif
+
+#ifndef VENUS_SERVER_H
+#include <venus/Server.h>
+#endif
+
+namespace recursivecall {
+
+class CalcBImpl : public cerl::Server, public CalcBBase 
+{
+public:
+	explicit CalcBImpl()
+	{
+	}
+
+	void cerl_call minus(
+		Caller* caller,
+		_MinusResult& result,
+		const NUM32 number1,
+		const NUM32 number2)
+	{
+	}
+
+	void cerl_call _run(cerl::Fiber self, SOCKET socketListen);
+};
+
+} //namespace
+
+#include "CalcBStub.h"
+
+#endif /* RECURSIVECALL_CALCB_IMPL_H */ 

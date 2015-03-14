@@ -1,0 +1,58 @@
+weekday(n) =
+	case n of
+		1: "Mon",
+		2: "Tue",
+		3: "Wed",
+		4: "Thu",
+		5: "Fri",
+		6: "Sat",
+		7: "Sun",
+		default: "Error";
+
+println("weekday(3) = ", weekday(3));
+
+abs(x) = if (x < 0) -x else x;
+
+abs2(x) =
+	case x of
+		< 0: -x,
+		default: x;
+
+println("abs(-3) = ", abs(x), " = ", abs2(x));
+
+factal(n) = if (n <= 1) 1 else n * factal(n-1);
+
+println("10! = ", factal(10));
+
+pi = 3.1415926;
+
+x = abs(sin(-pi/4));
+
+println("x = ", x);
+
+times1(n) =
+(
+	fun(y) = 
+	(
+		val = n * y,
+		val
+	),
+	fun
+);
+
+times2(n) =
+	fun(y) =
+	(
+		val = n * y,
+		val
+	);
+	
+times(n) =
+	fun(y) = n * y;
+
+twice = times(2);
+
+y = twice(3); 	// y = 6
+
+println("twice(3) = ", y);
+

@@ -1,0 +1,17 @@
++ MailReader的设计
+
+在Venus模型中，Server在接收用户定义函数的参数、Connection在接收返回值的时，如果含有字符串或者数组，此时需要提供一个alloc分配器来分配内存。
+为此，需要定义一个MailReader类，用于邮件读取。MailReader类的本质就是一个BufferRead类加上一个内存分配器。（MailReader类存放在文件Archive.h中）
+
+由于在读取邮件时引入了内存分配器，因此，必须解决内存释放的问题。该alloc内存分配器释放内存的函数是ScopedAlloc::clear()，它将释放由该分配器分配的所有内存。
+一个关键点就是：使用alloc分配器分配的内存的释放时机。Server端和Connection端对于内存释放的处理是不同的。
+
+++ Server
+
+由于server在accept一个Connection之后，Server将创建一个纤程来处理这个连接，这个纤程将处理该Conncection的所有Mail，因此在每次处理完成一个Mail的时候释放内存即可。
+ 
+++ Connection
+
+Connection与Server不同，由于Venus模型中一个Connection类可能会被多个纤程共享，因此，不能采用Server的设计方法：若在一个纤程处理完成一个Mail就让Alloc释放内存，将会影响其它纤程读取邮件。
+
+为了解决此问题，首先，每个fiber都要有一个alloc分配器，即：需要在fiber数据中加入alloc。其次，采用手工释放内存方法：当alloc确认其分配的内存不会再有fiber访问的时候调用ScopedAlloc::clear()释放内存。

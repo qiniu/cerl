@@ -1,0 +1,20 @@
+[Include]
+../../../tpl/include
+
+[Config Release]
+Product		Exe Release/urlparams
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/urlparams
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+ParseUrlParams.cpp
+

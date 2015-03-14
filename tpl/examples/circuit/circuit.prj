@@ -1,0 +1,22 @@
+[Include]
+../../../tpl/include
+../../../boost
+../../../boostmm
+
+[Config Release]
+Product		Exe Release/circuit
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/circuit
+Options		Debug; MultiThread; AnsiChar; Rtti; Exception
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+Circuit.cpp
+

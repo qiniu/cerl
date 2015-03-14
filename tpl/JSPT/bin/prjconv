@@ -1,0 +1,39 @@
+#!/usr/bin/php
+<?php
+	$argv = $_SERVER["argv"];
+	$argc = $_SERVER["argc"];
+	$AppPath = dirname($argv[0]);
+	if ($argc < 2) {
+		echo "Usage: prjconv <target-format> [<input>.prj]\n";
+		echo "Here <target-format> can be:\n";
+		chdir($AppPath . "/json2prj");
+		foreach (glob("*.php") as $File) {
+			echo "\t" . pathinfo($File, PATHINFO_FILENAME) . "\n";
+		}
+		return -1;
+	}
+
+	$PhpFile = $AppPath . "/json2prj/" . $argv[1] . ".php";
+	if (!file_exists($PhpFile)) {
+		echo "ERROR: $PhpFile doesn't exists!\n\n";
+		return -2;
+	}
+
+	if ($argc < 3) {
+		$PrjFile = pathinfo(getcwd(), PATHINFO_BASENAME) . ".prj";
+	}
+	else {
+		$PrjFile = $argv[2];
+	}
+	if (!file_exists($PrjFile)) {
+		echo "ERROR: $PrjFile doesn't exists!\n\n";
+		return -3;
+	}
+	
+	$Cmd = $AppPath . "/prj2json.exe " . $PrjFile . " | " . $AppPath . "/jspt.bat " . $PhpFile;
+	$PRJCONV_OUTFILE = getenv("PRJCONV_OUTFILE");
+	if ($PRJCONV_OUTFILE) {
+		$Cmd .= " > " . $PRJCONV_OUTFILE;
+	}
+	system($Cmd);
+?>

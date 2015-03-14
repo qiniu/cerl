@@ -1,0 +1,77 @@
++ 什么是 IoType ？
+
+即 sdl 中可以出现的类型。包括：
+
+1）预定义的原子类型：
+ * Char, Bool, Byte
+ * (U)Int16
+ * (U)Int32
+ * (U)Int64
+ * NInformation
+2） 由这些原则类型组合出来的结构体、动态数组、定长数组。
+
++ IoType 需要支持哪些 concept：
+
+1）Serialization（see <venus/Serialization.h>）。包括：
+
+template <class OutputStreamT>
+void cerl_call put(OutputStreamT& os, const T& val);
+
+template <class InputStreamT>
+bool cerl_call get(InputStreamT& is, T& val);
+
+这里 T 是我们的 IoType。
+
+2）Dump（see <venus/Dump.h>）。包括：
+
+template <class LogT>
+void cerl_call dump(LogT& log, const T& val);
+
+3）Copy（see <venus/Copy.h）。包括：
+
+template <class AllocT>
+void cerl_call copy(AllocT& alloc, T& dest, const T& src);
+
++ IoType 的 Copy 实现
+
+为了支持跨进程（这个进程是我们cerl中的进程，也就是纤程）传递，需要 IoType 支持深度拷贝，这就是 Copy 的来由。
+
+要对所有 IoType （含 _XXXResult, _XXXArgs）增加 copy 支持，实现要点如下：
+
+1）如果该 IoType 的所有成员都是 pod 类型，那么生成的 copy 函数为： dest = src;
+2）如果该 IoType 有非 pod 类型的成员，那么，除了 dest = src; 外，需要调用独立的 copy 函数。
+
+其实 1) 只是 2) 的特殊情形。
+
+举例，
+
+struct XXX
+{
+    Int32 a;
+    Char b;
+    String c;
+    Array<Int32, 16> d;
+};
+
+那么，生成：
+
+template <class AllocT>
+void cerl_call copy(AllocT& alloc, XXX& dest, const XXX& src)
+{
+    dest = src;
+    NS_CERL_IO::copy(alloc, dest.c, src.c);
+    NS_CERL_IO::copy(alloc, dest.d, src.d);
+}
+
+当然也可以直接生成：
+
+template <class AllocT>
+void cerl_call copy(AllocT& alloc, XXX& dest, const XXX& src)
+{
+    NS_CERL_IO::copy(alloc, dest.a, src.a);
+    NS_CERL_IO::copy(alloc, dest.b, src.b);
+    NS_CERL_IO::copy(alloc, dest.c, src.c);
+    NS_CERL_IO::copy(alloc, dest.d, src.d);
+}
+
+不确信这两种方案性能有多少差距，简单实现出来是第一位的。然后再有瓶颈时优化。

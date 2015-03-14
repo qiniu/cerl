@@ -1,0 +1,13 @@
+module RecursiveCall;
+
+type NUM32 = UInt32;
+
+server CalcA
+{
+	[id=1] add(NInformation node, NUM32 number1, NUM32 number2) -> {ok, UInt32 value} | false;
+}
+
+server CalcB
+{
+	[id=1] minus(NUM32 number1, NUM32 number2) -> {ok, UInt32 value} | false;
+}

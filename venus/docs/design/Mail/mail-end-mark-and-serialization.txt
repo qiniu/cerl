@@ -1,0 +1,30 @@
+邮件协议：
+
+* MailHeader header;
+* FID fid;
+* Args args; (对于 Request)
+或者: 
+  Result result; (对于 Reply)
+* MailEndMark mark;
+
+早期的一个错误决策 (See http://192.168.93.241/agile/edht/ticket/37)：
+
+* request 和 response 的邮件结尾，统一一下语义，由 Args、Result 的 serialization 来负责处理。
+
+但是，最终我们决定 Args, Result 不 Serialize vtNull。原因：
+
+1. vtNull 作为 Mail 结尾，这个是 venus 的假设，很可能其他的模型中并没有这个假设。
+2. Args 在只有 0个、1个 的时候，应该不需要生成 Args 类。但是如果 vtNull 由 Args/Result 来进行 Serialize，那么违背此原则。
+
+修改结果：
+
+1. 在 <venus/Mail.h> 中增加 put/get/skipMailBody 函数，用来写入/读取/跳过 Args/Result。
+2. FID fid 直接作为 MailHeader 的一个成员。
+
+最终的邮件协议：
+
+* MailHeader header; (including FID fid)
+* Args args; (对于 Request)
+或者: 
+  Result result; (对于 Reply)
+* MailEndMark mark;

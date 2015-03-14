@@ -1,0 +1,41 @@
+/*
+	Description:	Design of task pool mechanism supported in library async, part of CERL 2.0
+	Author:			Xihe Yu [krzycube@gmail.com]
+	Date:			2009-Nov-29
+*/
+
+注： Design文档中提到的名词并不一定在具体的代码实现中采用，这里只描述概念
+
+1. 概要
+--
+在async库中，提供了task pool机制，用以支持异步处理某些不可打断的耗时计算,或阻塞型操作(如访问文件系统)，来提升处理请求的吞吐能力。
+
+2. 构成
+--
+TaskPool由任务队列和一些处理任务的工作线程组成，线程数量取决于系统处理能力。执行过程需要几个方面的协作: MainThread中的Scheduler Fiber和 WorkFiber，另外的线程TaskThread, 任务信息TaskStub。
+
+TaskStub:
+    这是一个结构体，描述了执行这个任务需要涉及的Fiber以及要被执行的任务代码。用户编写的任务，内部实现中提供生成异步任务并提交任务消息的能力。
+	当Scheduler正在调度执行的某个WorkFiber执行到这些代码时，即开始进入处理任务的流程。目前任务代码中不建议进一步使用基于IoService类的异步操作代码，这还是未定义的行为，可能发生不确定的错误。
+	
+Scheduler:
+	这是这个系统中的主Fiber，负责响应外部请求处理IO、分配任务给TaskThread、调度执行系统中的Fiber，详见CERL 2.0的整体设计，IoService部分
+	
+WorkFiber
+	WorkFiber是Scheduler的调度单位。在CERL 2.0中，通常一个WorkFiber表达一个正在被处理的RequestMessage。
+	WorkFiber(s) 和Scheduler同属于MainThread。当WorkFiber开始执行描述一个任务的代码时，进行以下动作：
+	1) 构造TaskStub
+	2) 将TaskStub提交给Scheduler，等待被处理
+	3) 当前WorkFiber放弃执行权限挂起，直到Scheduler得知任务完成后将执行权切回到当前这个WorkFiber
+这里，有两个要点：第一,在WorkFiber中分配TaskStub结构而非在TaskThread中分配，因为告知任务完成的message(在linux的epoll中，这是需要allocate后传递指针，而不是直接copy)最终是在Scheduler和WorkFiber所在的MainThread释放,如果这个message由TaskThread来分配，则产生了跨线程的内存分配和释放，为避免这一点，表示任务完成的message是事先分配的，而这个消息实现上可以是TaskStub的一部分。第二，WorkFiber把TaskStub交给Scheduler而不是直接交给任务队列，是考虑到可能在当前的WorkFiber调用yield之前，任务就已经被TaskThread处理，并在TaskThread中开始执行从yield开始的任务代码，而这个yield会导致后面真正的任务代码无法被执行， 且TaskThread被挂起。(目前发现epoll和aio中在这种做法下仍然存在出错的可能性，待改进)
+	
+TaskThread (Task Handler):
+	1) 启动后每个TaskThread等待有任务投递到队列中
+	2) 在当前TaskThread中执行MainThread里的某WorkFiber中的任务代码
+	3) 完成后填充TaskStub中的完成标志位[optional，Scheduler可区分不同的消息类型来代替标志位]
+	4) 并将其重新post给Scheduler等待Scheduler终结这个task
+
+3. 执行流程
+--
+详见时序图 cerl_async_taskpool_design.png
+注意图中前两个Fiber在MainThread中， 而TaskThread为另外一个线程

@@ -1,0 +1,20 @@
+[Include]
+../../../..
+
+[Config Release]
+Product		Exe Release/test
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception; WarningAll
+ObjDir		Release
+LibDir		Release
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/test
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception; WarningAll
+ObjDir		Debug
+LibDir		Debug
+Libraries	
+
+[Source]
+*.cpp
+

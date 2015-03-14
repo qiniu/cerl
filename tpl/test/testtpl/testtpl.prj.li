@@ -1,0 +1,30 @@
+[Include]
+.
+../../../tpl/include
+../../../stdext/include
+../../../boost
+
+[Config Release]
+Product		Exe LRelease/testtpl
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		LRelease
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe LDebug/testtpl
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		LDebug
+LibDir		
+Libraries	
+
+[Source]
+// Transformation.cpp
+// ParseClass.cpp
+// Calculator.cpp
+// TestTpl.cpp
+// Customization.cpp
+// Circuit.cpp
+// Demo.cpp
+// XmlProcess.cpp
+

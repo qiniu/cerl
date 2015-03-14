@@ -1,0 +1,22 @@
+[Include]
+../../../tpl/include
+../../../stdext/include
+../../../boostmm
+
+[Config Release]
+Product		Exe Release/includefiles
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/includefiles
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+IncludeFiles.cpp
+

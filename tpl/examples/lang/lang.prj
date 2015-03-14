@@ -1,0 +1,22 @@
+[Include]
+../../../tpl/include
+../../../stdext/include
+../../../boost
+
+[Config Release]
+Product		Exe Release/lang
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/lang
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+Lang.cpp
+

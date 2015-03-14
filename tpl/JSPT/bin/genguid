@@ -1,0 +1,6 @@
+#!/usr/bin/php
+<?php
+	require("json2prj/include/guid.class.php");
+	echo createGuid();
+?>
+

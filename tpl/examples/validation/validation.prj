@@ -1,0 +1,21 @@
+[Include]
+../../../tpl/include
+../../../boost
+
+[Config Release]
+Product		Exe Release/simplest
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/simplest
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+Simplest.cpp
+

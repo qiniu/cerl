@@ -1,0 +1,19 @@
+if [ -z $PLATFORM ]; then
+	PLATFORM=li32
+fi
+
+AppPath0=`dirname $0`
+AppPath=`cd $AppPath0; pwd`
+
+if [ -z $1 ]; then
+	TargetDir=~/bin
+else
+	TargetDir=$1
+fi
+
+echo "$AppPath/venusc \$*" > $TargetDir/venusc
+echo "$AppPath/sdl2json.$PLATFORM \$*" > $TargetDir/sdl2json
+echo "$AppPath/sdl2json.$PLATFORM \$*" > $AppPath/sdl2json
+
+chmod +x $TargetDir/venusc $TargetDir/sdl2json $AppPath/sdl2json
+

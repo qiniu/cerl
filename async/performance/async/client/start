@@ -1,0 +1,8 @@
+count=$1
+while [ $count -gt 0 ]
+do
+	Release/test&
+	echo "to start:" $count
+	count=$(expr $count - 1)
+done
+exit 0

@@ -1,0 +1,21 @@
+[Include]
+../../../tpl/include
+../../../stdext/include
+
+[Config Release]
+Product		Exe Release/removecomments
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/removecomments
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+RemoveCppComments.cpp
+

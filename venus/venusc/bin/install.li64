@@ -1,0 +1,5 @@
+PLATFORM=li64
+
+AppPath=`dirname $0`
+$AppPath/install.li32
+

@@ -1,0 +1,16 @@
+if [ -z $1 ]; then
+	PLATFORM=li32
+	export PRJCONV_OS=linux
+	export PRJCONV_BITS=32
+	export PRJCONV_OUTFILE=Makefile.li32
+	prjconv make
+	export PRJCONV_BITS=64
+	export PRJCONV_OUTFILE=Makefile.li64
+	prjconv make
+	ln -s -f Makefile.$PLATFORM Makefile
+else
+	export PRJCONV_BITS=independent
+	export PRJCONV_OUTFILE=Makefile
+	prjconv make
+fi
+

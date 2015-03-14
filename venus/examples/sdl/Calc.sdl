@@ -1,0 +1,25 @@
+module UserFunc;
+
+code confliction = 0x81;
+code notimpl = 0x82;
+
+type NUM = UInt64;
+type NUM32 = UInt32;
+type Reason = confliction | notimpl ;
+
+type Bar = {String s, UInt32 n};
+type Foo = {UInt32 n, String s, Char c, Bool b, Bar[] bars};
+
+server Calc
+{
+	[id=1] square(UInt32 number) -> {ok, UInt32 str} | error;
+	[id=2] add(NUM32 number1, NUM32 number2) -> {ok, UInt32 value} | false;
+	[id=3] dec(UInt32 number1, UInt32 number2, UInt32 number3) -> {ok, Int32 value} | false;
+	[id=4] helloworld1() -> {ok, Int32 value} | false;
+	[id=5] helloworld2() -> ok | false;	
+	[id=6] square2(NUM number) -> {ok, UInt32 str} | {error, Reason reason};
+		
+	[id=0x81, async] stop();
+	[id=0x91, async] async1(UInt32 number1);
+	[id=0xa1, async] async2(UInt32 number1, UInt32 number2);
+}

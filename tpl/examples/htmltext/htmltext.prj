@@ -1,0 +1,21 @@
+[Include]
+../../../tpl/include
+../../../boostmm
+
+[Config Release]
+Product		Exe Release/htmltext
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/htmltext
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+HtmlText.cpp
+

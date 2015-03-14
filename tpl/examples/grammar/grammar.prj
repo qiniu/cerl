@@ -1,0 +1,20 @@
+[Include]
+../../../tpl/include
+
+[Config Release]
+Product		Exe Release/grammar
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/grammar
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+SimpleGrammar.cpp
+

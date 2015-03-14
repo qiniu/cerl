@@ -1,0 +1,71 @@
+/*
+	Description:  	会议纪要
+					会议时间：2009-Oct-15
+					与会人员：许式伟，于曦鹤，莫华枫，马飞涛，宋海涛
+	Author:			于曦鹤 [KrzyCube@gmail.com]
+	Date:			2009-Oct-16	
+*/
+
+1.内容回顾
+	回顾前一次会议讨论的内容：
+		boost asio 模型
+		
+		cerl 1.0 模型
+		
+		erlang style的同步RPC所存在的问题：
+			a. 互发同步消息死锁
+			b. 资源进程IO阻塞
+			
+		cerl 2.0 提出新的执行模型：
+			Process及Process处理的Requests都是Context，
+			由Scheduler从事件队列（到当前Node的邮件队列）中
+			提取并分派给不同的Process执行。
+			且一个Process中的多个Requests可并发执行（针对会阻塞的Request执行序列，
+			如：与其他Process通信）
+		
+		扩展cpp语言标签，增加同步RPC语法糖
+		
+	详细情况见2009-10-13的会议记录
+		
+2.新议题
+	a.CERL2.0中同步调用的内部实现方式：
+		remote_process->sync_fun_call(result, args);
+	  执行流程为：
+		remote_process->async_send_request(args, callback);
+			callback();
+				remote_process2->async_send_request(args,callback2);
+					callback2();
+						...
+	b.request注册
+		由于Process中存在重叠的Request执行序列，因此需要对会阻塞的Request提供注册机制，
+		使阻塞的请求返回时(Response)可找到其相应的Request，继续往下执行，形如：
+		A Request Context:
+			async_send_request(args, callback) -> stub;
+			register(stub, reqContext);
+		对于Multi-call，则可以采用两种方式：
+			1. 所有call的handler相同，则只需要注册一个callback。
+			2. handler不相同，两种可选的方式：
+				a.将这些handler打包成一个外部callback来使用，根据条件选择handler
+				b.传入handler数组，根据返回HandlerArray[stubNo-baseNo]访问
+				
+	c.如何定义语法糖(讨论中议题)
+		现在的同步调用方式在代码中呈现如：
+			class ServerName
+			{
+				……
+				someFun(……)
+				{
+					……
+					remote_process.f(result, args);
+				}
+				
+			}
+		
+		已提出的两个方式：
+			1. 将someFun(...) 生成为class，将需要访问的变量都作为类的成员，
+			而后remote_process.f(...)展开的代码就可以访问类中的成员
+			
+			2. 将someFun中需要访问的变量全部构造为结构体， 
+			将结构体整个传递给各个函数，形如Erlang中GenServer里传递的State
+			
+			

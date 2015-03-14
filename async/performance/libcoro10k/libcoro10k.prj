@@ -1,0 +1,22 @@
+[Include]
+../../../async/include
+
+[Config Release]
+Product		Exe Release/test
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception; WarningAll
+Defines		CORO_ASM=1
+ObjDir		Release
+LibDir		
+Libraries	rt
+
+[Config Debug]
+Product		Exe Debug/test
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception; WarningAll
+Defines		CORO_ASM=1
+ObjDir		Debug
+LibDir		
+Libraries	rt
+
+[Source]
+*.cpp
+../../../async/include/async/fiber/libcoro/coro.c

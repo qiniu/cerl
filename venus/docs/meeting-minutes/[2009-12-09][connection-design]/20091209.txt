@@ -1,0 +1,11 @@
+时间：2009年11月9日
+参与者：许世伟、于曦鹤、段雪涛、莫华枫
+主题：venus的通讯及Connection设计
+
+
+1.rpc调用时需要携带Fiber self参数，即当前fiber。由于所有work fiber对于同一个服务器共享一个Concetion，因而，通过rpc执行的调用需要携带当前fiber，以便rpc返回时唤醒。
+2.send()在发送msg前，首先在将当前Connection持有的当前mail_no加一，然后将此mail_no填充msg。最后将msg放入DataQueue，之后返回mail_no。
+之后，如果发送的msg需要response，则调用recv()。调用recv()时，需要传入mail_no，recv()通过mail_no找到在recv buffer中对应的slot，将自身的fiber填入。如果此时该slot非空，则锁住recv buffer，阻塞后续recv调用。如果slot空闲，则填入fiber，yield，等待response返回。
+Connection同样用一个独立的recv fiber读取response。一旦读取到一个response，提取出mail_no，找到相应的slot，得到fiber，然后将其唤醒。
+参见Connection流程图
+3.Connection采用引用计数。为便于Connection的复制和使用，采用引用计数维护生命周期。

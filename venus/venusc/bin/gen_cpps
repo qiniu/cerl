@@ -1,0 +1,31 @@
+#!/usr/bin/php
+<?php
+	$argc = $_SERVER["argc"];
+	if ($argc < 1) {
+		echo "Usage: gen_cpps [input.json]\n\n";
+		return -1;
+	}
+	
+	if ($argc == 1)
+		$doc = json_decode(stream_get_contents(STDIN));
+	else
+		$doc = json_decode(file_get_contents($argv[1]));
+	
+	$exec_path = dirname($argv[0]);
+	include $exec_path . '/inc/cpp/functions.php';
+	
+	if ($doc)
+	{	
+		require($exec_path . "/inc/cpp/gen_base.php");
+		require($exec_path . "/inc/cpp/gen_proxy.php");
+		require($exec_path . "/inc/cpp/gen_impl.php");
+		require($exec_path . "/inc/cpp/gen_stub.php");
+		return 0;
+	}
+	else
+	{
+		echo "Input file error: Maybe is not a valid json file?\n\n";
+		return -2;
+	}
+	
+?>

@@ -1,0 +1,50 @@
+async库io部分linux实现设计说明
+	async的io部分实现文件和网络的io功能。两者都实现异步io操作，利用fiber在启动异步io操作后，将操作切换到调度fiber，以便执行允许其他代码得到执行。一旦异步操作完成，将会向完成队列投送“操作完成”消息，由调度器将执行权切换回io代码所在fiber，继续执行后续代码。
+	因此，io部分的实现重点在构建一个异步io机制。受限于现有技术，文件和网络的io采用不同的异步模型和底层技术。文件io采用aio，而网络io则使用epoll。
+
+文件io
+	文件io的结构相对简单些。aio建立在linux的singal机制之上。首先需要选定一个signal，并注册对应的回调函数。调用aio操作时，指定对应的signal。在io操作完成后，aio触发signal，linux将启动独立线程，执行回调函数。
+	aio依赖于signal机制，因而使用上存在一定的限制。其中，直接对io，乃至整个async的设计产生重大影响的，是在singal响应函数中不能使用malloc等不可重入的函数。关于这一点，后文会详细描述。
+	文件Io的异步操作被封装在FileObject类中。read_some()/write_some()函数在同步语法下提供异步语义。当客户代码使用传统的同步调用语法调用read_some()/write_some()后，这两个函数首先设置aio_cb控制块。而后调用aio_read()/aio_write()。然后调用yield()，将执行权还给dispatcher，以便其他fiber得到执行。
+	aio完成后，内核将会触发singal。linux的signal机制将会调用预先设定的回调函数。回调函数从参数中提取FileOverlapped数据块，调用aio_return()获得操作的字节数。最后，调用IoService::post()向dispatcher投送执行完成消息。
+	dispatcher在完成若干消息的执行之后，开始处理aio的完成消息，直接将执行权切换到中断点，继续执行read_some()/write_some()的后续代码。在调整文件当前位置之后，返回已处理的字节数。
+
+socket io
+	linux的aio机制尚且未能覆盖socket，因而采用epoll实现网络异步访问。
+	socket的异步访问分为两个部分：SocketFileObject和SocketIoService。前者封装异步访问的“前端”，即操作的发起。而socket操作的完成处理，由SocketIoService实现。
+	SocketFileObject的read_some()/write_some()与FileObject的类似，但更复杂。SocketFileObject维护了两个队列，分别用于缓冲读请求和写请求。read_some()/write_some()函数直接将overlapped结构作为IO消息使用（为此overlapped结构做了相应的扩充，详见“overlapped数据结构”一节），首先将数据缓冲指针和大小填充overlapped结构，而后构建epoll事件，并通过epoll_ctl()注册。SocketFileObject使用自身实例的指针填充epoll_event::data::ptr成员，此数据将在SocketIoService处理epoll事件时被使用。在完成epoll注册后，通过yield()让出执行权。
+	SocketIoService在程序启动时，通过start()成员函数启动一个线程。这个线程建立循环，调用epoll_wait()，获取epoll事件。epoll_wait()将被阻塞，直到第一个事件到达。当得到一个事件后，程序便从epoll_event::data::ptr中取出SocketFileObject指针。如果事件包含读操作，程序便从SocketFileObject的读队列中取出FileOverlapped对象，用对象的相关信息调用read()|recv()/write()|send()，执行真正的io操作。完成后，则通过IoService::post()函数，将预先准备好的消息投递到完成队列。如果事件包含写操作，那么就从写队列中取出overlapped对象，执行write()|send()操作，并投递完成消息。最后，程序必须检测SocketFileObject对象的读队列和写队列，如果存在更多的io消息，那么还应当注册相应的epoll事件。
+	在完成所有事件的处理后，程序回到epoll_wait()，等待后续的io事件。
+	与文件io一样，dispatcher在若干时间后，处理socket io的完成消息，回到中断点，继续执行后续代码。
+
+类体系
+	文件io和socket io建立在共同的类体系之上。
+	核心类型是模板FileImpl<>：
+		template<class FileObjectT, class OverlappedT = typename FileObjectT::overlapped_type>
+		class FileImpl : public FileObjectT, public OverlappedT
+		{
+			...
+		};
+	FileImpl继承自两个模板参数FileObjectT和OverlappedT。前者执行io操作，实现read_some()/write_some()函数。后者用于保存fiber相关的状态参数，主要包括fiber对象和当前文件操作位置。文件io和socket io，各自相应的FileObjectT和OverlappedT。这种结构上的拆分，目的在于允许不同的fiber访问同一个io对象。逻辑上允许多个不同的OverlappedT的实例共享同一个FileObjectT对象，有很大的灵活性。
+	FileImpl模板额外定义了read()/write()函数。read_some()/write_some()函数并不能保证一次io操作即可取到或送出所需的所有数据。而read()/write()函数则通过反复读取/写入，确保所有数据操作可以在一次调用中完成。
+	FileObject用于模板参数FileObjectT，提供了文件io的异步访问实现。核心的成员函数是read_some()/write_some()。这两个函数都是模板，模板参数是OverlappedT。函数第一个参数就是OverlappedT类型，通过这个参数，FileObject可以获得特定的fiber，以及相关的状态数据，包括fiber、offset、aio control block。另外一个重要的成员是完成消息wakeup。该消息将在这两个函数中被分配，在aio的signal回调中投递。
+	FileOverlapped实际上有两个版本。一个是FileOverlapped32，用于32位的文件访问；另一个是FileOverlapped64，用于64位的文件访问。两者基本结构相同，差异在于offset的类型（32bit vs 64bit），以及move()、seek()等操作的算法。FileOverlapped在初始化的时候，将自身的对象指针（this）赋值给aiocb::aio_sigevent::sigev_value::sival_ptr。这个指针将会传递给aio的完成回调函数。回调获得这个指针后，可直接转换成FileOverlapped，提取和传递数据。
+	SocketFileObject是socket io的FileObjectT实现，提供了socket io的异步访问。read_some()/write_some()同FileOverlapped::read()/write()类似，只是实现算法不同而已。
+	SocketOverlapped只需要一个版本。因为socket是流设备，不存在offset的概念。SocketOverlapped相比FileOverlapped省去了offset。aiocb结构是aio特有的，SocketOverlapped不需要，但其中的buffer指针和buffer size作为成员保留。SocketOverlapped的另一个特别之处是，它需要作为socket io的启动消息投递到SocketFileObject的读队列和些队列中，因此必须从ListNode继承而来。
+	socket io方面还有一个类ListenSocket，用于监听端口，执行accept()操作，以获得客户机发出的连接请求。其结构与SocketFileObject相似，只是省去了写队列。因为accept()操作对应EPOLLIN事件，相当于读操作。
+	connect()函数用于建立连接。由于是一次性操作，无须构建专门的类，仅用一个函数实现。（在linux的实现版本中，有ConnectSocket类，起作用仅仅是为了将SocketIoService所需的数据打包传递）。
+	在io的类体系中，另一个重要的类型是Shared<>模板：
+		template<class ResourceT>
+		class Shared : public ResourceT
+		{
+			...
+		};
+	模板参数是实例化后的FileImpl<>。它的作用是提供用多fiber安全的io类。通过一个特殊的FiberMutex，执行fiber层面的互斥，确保多fiber访问io对象时的安全性。
+
+消息的生成和投送
+	由于aio使用signal处理文件io的完成回调，但signal的响应函数中不能调用malloc等不可重入的系统调用。但在回调中必须投递文件io的完成消息。消息必然投送到完成对列中。因而很可能发生队列尺寸不够，需要内存再分配。从而破坏了规矩。
+	解决问题的办法就是将内存的分配转移到回调之外，也就是在调用aio_read()/aio_write()之前分配消息的内存。完成队列采用链表结构，内存在启动aio之前分配，当回调函数中调用post的时候，仅仅是将消息链入队列。这种做法也带来了两个额外的好处：其一，post操作仅仅是对链表的指针操作，提高性能。其二，由于内存的分配和释放都在主线程（work fiber都是在主线程中执行）中进行，内存分配系统可以使用单线程的内存池，进而保证了最高的效率。
+
+epoll事件注册的加速
+	epoll的事件注册有一些特殊的地方。一个socket句柄只能注册一个事件结构，而一个事件结构最多可以包含一个输入事件和一个输出事件。每次调用read_some()和write_some()，以及每次处理完一个事件，都需要再次注册或注销事件。epoll_ctl()有三种操作：add、modify和delete。但如果已经有一个句柄注册了，那么只能用modify修改，反之亦然。为此，每次调用的时候，必须用add或modify试探一下，如果返回有错，则采用另一种方式。
+	这样的方式增加很多不必要的系统调用。通过引入一个old event变量，可以保证仅用一次调用便可完成event注册。在SocketFileObject中增加一个成员变量oldevts，记录上一次事件注册的epoll_type::events值。如果这次注册的值和上次注册的值相等，则不再注册；如果新值为0，那么就将已注册的事件删除；如果旧值为0，就add；如果两者都不为0，就modify。

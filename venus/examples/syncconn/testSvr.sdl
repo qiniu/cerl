@@ -1,0 +1,15 @@
+//
+// Description: performance testing server
+// Author: 		Mohuafeng
+// Contact:		longshanksmo@gmail.com
+// Date:		2009-12-25
+//
+
+module testSvr;
+
+type MsgData=Char[100];
+
+server TestSvr
+{
+	[id=1] test(MsgData val) -> {ok, MsgData ret};
+}

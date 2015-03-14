@@ -1,0 +1,20 @@
+[Include]
+../../../../../async/include
+../../../include
+
+[Config Release]
+Product		Exe Release/test
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception; WarningAll
+ObjDir		Release
+LibDir		
+Libraries	rt
+
+[Config Debug]
+Product		Exe Debug/test
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception; WarningAll
+ObjDir		Debug
+LibDir		
+Libraries	rt, boost_system-mt
+
+[Source]
+*.cpp

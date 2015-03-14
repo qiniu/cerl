@@ -1,0 +1,33 @@
+我们原先用 Semaphore 实现的 MessageQueue，今天我查了下维基百科，没有问题，上面给出了基于 Semaphore 的实现，和我们的实现一致。
+今天为了测试 MessageQueue的bug，改用了 Condition 实现：
+
+private:
+         Queue m_msgs;
+         CS m_monitor;
+         Condition m_cond_empty;
+
+public:
+         void cerl_call push(Node* val)
+         {
+                   CS::scoped_lock lock(m_monitor);
+                   const bool fempty = m_msgs.empty();
+                   m_msgs.push(val);
+                   if (fempty)
+                            m_cond_empty.notify_one();
+         }
+
+         Node* cerl_call pop()
+         {
+                   CS::scoped_lock lock(m_monitor);
+                   while (m_msgs.empty())
+                            m_cond_empty.wait(m_monitor);
+                   return m_msgs.pop();
+         }
+
+基于 Condition 实现的 MessageQueue 相比 Semaphore 是有性能优势的。
+这一点很容易理解，因为 Condition 相关的代码只在特殊情况（即队列为空）下起作用，一般情形下线程之间的同步只有一个互斥体。
+最初我们的 MessageQueue 就是基于 Condition 实现，但是由于Windows平台下没有 Condition，所以改为 Semaphore。
+现在我修改 MessageQueue 的实现策略调整如下：
+
+ * 在 Linux 平台下，使用 Condition 实现。
+ * 在 Windows 平台下，使用 IOCP 实现。

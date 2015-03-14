@@ -1,0 +1,22 @@
+[Include]
+../../../../tpl/include
+../../../../boost
+../../../../boostmm
+
+[Config Release]
+Product		Exe Release/calc
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception; WarningAll
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/calc
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception; WarningAll
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+Calc.cpp
+
