@@ -15,7 +15,7 @@ CERL2.0 - Erlang Model for C++
 
 ## 为何今天我重新考虑将 CERL 发布出来？
 
-在 ECUG Con 2014 大会，我重新回顾了我整个服务端最佳实践的历程，这一次我没有像 2010 年杭州的 ECUG Con 大会那样含糊其词，而是非常鲜明地探讨了 Erlang 编程范式的自相矛盾之处 (http://blog.qiniu.com/archives/1059)。尽管我自认为这只是技术探讨，并非是对 Erlang 语言并没有恶意攻击（我至今仍然极度推崇  http://open.qiniudn.com/[Joe-Armstrong]Making-reliable-distributed-systems-in-the-presence-of-software-errors.pdf ，认为那是分布式编程理论的启蒙之作），这个演讲确实让 Erlang 社区同学们大为受伤。这其中又以某位号称 Erlang 大拿的专家为最：
+在 ECUG Con 2014 大会，我重新回顾了我整个服务端最佳实践的历程，这一次我没有像 2010 年杭州的 ECUG Con 大会那样含糊其词，而是非常鲜明地探讨了 Erlang 编程范式的自相矛盾之处 ( http://blog.qiniu.com/archives/1059 )。尽管我自认为这只是技术探讨，并非是对 Erlang 语言并没有恶意攻击（我至今仍然极度推崇  http://open.qiniudn.com/[Joe-Armstrong]Making-reliable-distributed-systems-in-the-presence-of-software-errors.pdf  ，认为那是分布式编程理论的启蒙之作），这个演讲确实让 Erlang 社区同学们大为受伤。这其中又以某位号称 Erlang 大拿的专家为最：
 
 ![image](http://open.qiniudn.com/cerl/yufeng.png)
 
