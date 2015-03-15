@@ -45,6 +45,13 @@ CERL2.0 - Erlang Model for C++
 * 李道兵
 * 郭理靖
 
+# 关于 CERL 库的性能
+
+没有最新的对比数据，2009 年由莫华枫的推动的测试数据大致是：
+
+* 在没有设定超时的情况下，CERL 的 performance 大体和 boost asio 相同。
+* 在支持 io timeout 的情况下，CERL 的 performance 远好于 boost asio。究其原因是因为 CERL 的定时器做了较大程度的优化，而 boost asio 的定时器写得只是中规中矩。
+
 # CERL 库的基本结构
 
 整个 REPO 包含 5 个子项目，从依赖关系来说，依次是：
