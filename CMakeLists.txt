@@ -56,5 +56,4 @@ install(
 		PATTERN "*.hpp"
 		PATTERN "*.inl"
 		PATTERN "*.c"
-		PATTERN ".svn" EXCLUDE
 )
