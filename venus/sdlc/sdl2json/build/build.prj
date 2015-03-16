@@ -1,0 +1,21 @@
+[Include]
+../../../../tpl/include
+../../../../stdext/include
+
+[Config Release]
+Product		Exe ../../bin/$(Platform)/sdl2json
+Options		Release; MultiThread; AnsiChar; NoRtti; Exception; WarningAll; MiniDepency
+ObjDir		Release
+LibDir		
+Libraries	
+
+[Config Debug]
+Product		Exe Debug/sdl2json
+Options		Debug; MultiThread; AnsiChar; NoRtti; Exception; WarningAll
+ObjDir		Debug
+LibDir		
+Libraries	
+
+[Source]
+../Main.cpp
+
