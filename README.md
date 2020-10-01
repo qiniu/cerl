@@ -1,5 +1,6 @@
 CERL2.0 - Erlang Model for C++
 ==============
+Please add english language also as this is very dificult to understand for a majority of people as we dont know Chinese language
 
 # 重要声明
 
