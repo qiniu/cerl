@@ -67,3 +67,6 @@ CERL2.0 - Erlang Model for C++
 最后再次强调：
 
 * 非常不推荐基于 CERL 库来写商业代码。但是学习 CERL 库（特别是 async 这个子库）也许非常有助于你理解 Golang 语言的背后机理。而了解 CERL 的整个历程，也可能有助于你理解为何七牛选择了 Golang。
+
+#nice work
+#try to make it simple
